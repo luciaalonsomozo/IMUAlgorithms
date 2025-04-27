@@ -10,7 +10,7 @@ input_file = file_paths[4]
 output_file = file_paths[5]
 
 # Complementary filter alpha
-alpha = 0.5
+alpha = 0.02
 
 thetaHat_rad = 0.0
 phiHat_rad = 0.0
