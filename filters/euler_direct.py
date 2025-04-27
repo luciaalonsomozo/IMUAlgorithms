@@ -2,7 +2,7 @@ import csv
 import math
 from panda3d.core import LQuaternionf, Vec3
 
-csv_filename = "carpetas_datos.csv"  
+csv_filename = "files.csv"  
 with open(csv_filename, "r") as file:
     first_line = file.readline().strip()
 

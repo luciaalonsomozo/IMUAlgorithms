@@ -17,7 +17,7 @@ int main() {
     FusionAhrsInitialise(&ahrs);
 
 
-    FILE *file_datos = fopen("carpetas_datos.csv", "r");
+    FILE *file_datos = fopen("files.csv", "r");
     if (!file_datos) {
         perror("Error opening the file carpetas_datos.csv.");
         return 1;

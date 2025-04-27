@@ -4,7 +4,7 @@ import pandas as pd
 # GyrX,GyrY,GyrZ.
 # To get good results, the data should be collected while the device is stationary.
 
-csv_filename = "carpetas_datos.csv"  
+csv_filename = "files.csv"  
 
 with open(csv_filename, "r") as file:
     first_line = file.readline().strip()  

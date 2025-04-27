@@ -35,7 +35,7 @@ int main()
     FusionAhrsSetSettings(&ahrs, &settings);
 
 
-    FILE *data_file = fopen("carpetas_datos.csv", "r");
+    FILE *data_file = fopen("files.csv", "r");
     if (!data_file) {
         perror("Error opening the file.\n");
         return 1;

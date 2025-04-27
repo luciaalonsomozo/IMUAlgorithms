@@ -1,7 +1,7 @@
 import csv
 import math
 
-csv_filename = "carpetas_datos.csv"  
+csv_filename = "files.csv"   
 with open(csv_filename, "r") as file:
     first_line = file.readline().strip()  
     

@@ -33,10 +33,10 @@ class Magnetometer(object):
     def run(self):
 
         # Load data to calibrate the magnetometer without DMP
-        data = np.loadtxt("datos/calibrar_acc2/mag3_raw.csv",delimiter=',')
+        data = np.loadtxt("data/calibration/mag3_raw.csv",delimiter=',')
         
         # Load data to calibrate the accelerometer
-        # data = np.loadtxt("datos/calibrar_acc2/acc3_raw.csv",delimiter=',')
+        # data = np.loadtxt("data/calibration/acc3_raw.csv",delimiter=',')
          
         print("shape of data array:",data.shape)
         print("First 5 rows raw:\n", data[:5])
