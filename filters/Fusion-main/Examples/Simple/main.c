@@ -19,7 +19,7 @@ int main() {
 
     FILE *file_datos = fopen("files.csv", "r");
     if (!file_datos) {
-        perror("Error opening the file carpetas_datos.csv.");
+        perror("Error opening the data file");
         return 1;
     }
 
@@ -40,13 +40,13 @@ int main() {
 
     FILE *inuput_file = fopen(file_paths[4], "r");
     if (inuput_file == NULL) {
-        printf("Error opening the input file.\n");
+        printf("Error opening the input file");
         return 1;
     }
 
     FILE *output_file = fopen(file_paths[9], "w");
     if (output_file == NULL) {
-        perror("Error opening the ouput file.\n");
+        perror("Error opening the ouput file");
         return 1;
     }
 
