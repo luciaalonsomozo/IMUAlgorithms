@@ -28,5 +28,5 @@ def downsample_points(points, target_size):
 
 filtered_data = downsample_points(data, target_points)
 
-output_file = "data/calibration_30000_samples/acc3_filtered.csv"
+output_file = "data/calibration_30000_samples/acc3_filtered.cs"
 pd.DataFrame(filtered_data).to_csv(output_file, index=False, header=False)
