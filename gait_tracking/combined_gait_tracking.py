@@ -27,8 +27,6 @@ gyroscope = data[:,4:7]
 accelerometer = data[:, 1:4] * (1 / 1000.0)
 magnetometer = data[:, 7:10]
 
-print(len(timestamp))
-
 # Plot sensor data
 figure, axes = pyplot.subplots(nrows=3, sharex=True, gridspec_kw={"height_ratios": [6, 6, 6]})
 
@@ -77,7 +75,7 @@ ahrs.settings = imufusion.Settings(imufusion.CONVENTION_NWU,
                                    100,  # magnetic rejection
                                    5 * sample_rate)  # rejection timeout = 5 seconds
 
-magneticPercentage = 0.01
+magneticPercentage = 0.40
 
 # Process sensor data
 delta_time = numpy.diff(timestamp, prepend=timestamp[0])
@@ -90,6 +88,8 @@ acceleration = numpy.empty((len(timestamp), 3))
 count_magnetometer = 0
 count_no_magnetometer = 0
 
+magnetometer_norms = [92.34750944124048, 85.71788028177085, 72.16886447769564, 67.04362385790316, 57.09150549775334, 60.2010381970278, 58.79177238355721, 68.21636533853149, 76.23468698696152, 67.3167512585092, 58.664576193815634, 62.84785199193366, 72.82666064018039, 95.01028891651683, 78.55275297530953, 76.30047509681707, 79.1049145123108, 78.71342007561354, 74.44308228438692]
+
 for index in range(len(timestamp)):
      
     gyroscope[index] = fusion_calibration_inertial(gyroscope[index], 
@@ -99,14 +99,14 @@ for index in range(len(timestamp)):
     
     magnetometer[index] = fusion_calibration_magnetic(magnetometer[index],
                                                       numpy.array([[ 1.08366655, -0.0187489,  0.01229909],
-                                                               [-0.0187489 ,  1.04376805 ,-0.00784824],
-                                                                   [ 0.01229909, -0.00784824, 1.05946304]]) ,
-                                                    numpy.array([12.56 * 0.15 , -68.81  * 0.15, -57.65 * 0.15]))
+                                                                    [-0.0187489 ,  1.04376805 ,-0.00784824],
+                                                                    [ 0.01229909, -0.00784824, 1.05946304]]) ,
+                                                     numpy.array([0,0,0]))
     
     accelerometer[index] = fusion_calibration_inertial(accelerometer[index],
                                                       numpy.array([[1.02497 , -0.00726 , 0.01056] ,[-0.00726 , 1.0165 , -0.00169], [0.01056 , -0.00169 , 0.94969]]),
                                                       numpy.array([1, 1, 1]),
-                                                      numpy.array([187.39 * scale_acc, -224.86 * scale_acc, 113.28 * scale_acc]))
+                                                      numpy.array([0,0,0]))
     
     gyroscope[index] = offset.update(gyroscope[index])
 
@@ -115,10 +115,7 @@ for index in range(len(timestamp)):
     
     mod = math.sqrt(pow(magnetometer[index][1],2) + pow(magnetometer[index][2], 2) + pow(magnetometer[index][0], 2))
     
-    print(mod)
-    
-  
-    if (mod > (1 - magneticPercentage)*37 and mod < (1 + magneticPercentage)*37):
+    if (mod > (1 - magneticPercentage)*magnetometer_norms[index//1000] and mod < (1 + magneticPercentage)*magnetometer_norms[index//1000]):
         ahrs.update(gyroscope[index], accelerometer[index], magnetometer[index], delta_time[index])
         count_magnetometer += 1
     else:
