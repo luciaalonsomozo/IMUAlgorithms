@@ -121,7 +121,7 @@ for index in range(len(timestamp)):
     else:
         ahrs.update_no_magnetometer(gyroscope[index], accelerometer[index], delta_time[index])
         count_no_magnetometer += 1
-        
+           
     euler[index] = ahrs.quaternion.to_euler()
 
     ahrs_internal_states = ahrs.internal_states

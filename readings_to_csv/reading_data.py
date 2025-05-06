@@ -12,12 +12,12 @@ with open(csv_filename, "r") as file:
 file_paths = first_line.split(",")
 
 # This corresponds to approximately 52 seconds of data
-N = 19500
+N = 19000
 
 try:
     with serial.Serial(port, baudrate, timeout=2) as ser, open(file_paths[4], "w", newline="") as data_file, open(file_paths[1], "w", newline="") as f_mag, open(file_paths[0], "w", newline="") as f_acc, open(file_paths[2], "w", newline="") as f_gyr:
         writer_data = csv.writer(data_file)
-        writer_data.writerow(["Time", "AccX", "AccY","AccZ","GyrX", "GyrY", "GyrZ", "MagX","MagY", "MagZ"])  # Cabecera
+        writer_data.writerow(["Time", "AccX", "AccY","AccZ","GyrX", "GyrY", "GyrZ", "MagX","MagY", "MagZ"]) 
 
         writer_mag = csv.writer(f_mag)
         writer_acc = csv.writer(f_acc)
