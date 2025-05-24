@@ -1,17 +1,30 @@
 /****************************************************************
- * Author: Lucía Alonso Mozo
- * Builds on Example2_Advanced.ino to set up interrupts when data is ready
+ * Example2_Advanced.ino
+ * ICM 20948 Arduino Library Demo
+ * Shows how to use granular configuration of the ICM 20948
  * Owen Lyke @ SparkFun Electronics
- * Original Creation Date: June 5 2019
+ * Original Creation Date: April 17 2019
+ *
+ * Please see License.md for the license information.
+ *
+ * Distributed as-is; no warranty is given.
  ***************************************************************/
 
+
 #include "ICM_20948.h" // Click here to get the library: http://librarymanager/All#SparkFun_ICM_20948_IMU
+#include <BMP388_DEV.h> 
+
+//#define USE_SPI       // Uncomment this to use SPI
 
 #define SERIAL_PORT Serial
 
-#define INT_PIN 5 // Make sure to connect this pin on your uC to the "INT" pin on the ICM-20948 breakout
-#define SCL_PIN 6 //6 in DAURIAN 
-#define SDA_PIN 7 //7 in DAURIAN 
+#define SPI_PORT SPI     // Your desired SPI port.       Used only when "USE_SPI" is defined
+#define SPI_FREQ 5000000 // You can override the default SPI frequency
+#define CS_PIN 2         // Which pin you connect CS to. Used only when "USE_SPI" is defined
+
+// Pines a añadir
+#define SCL_PIN 6
+#define SDA_PIN 7
 #define REG_1V8_EN_PIN 8 //enable 1v8 register
 
 #define WIRE_PORT Wire // Your desired Wire port.      Used when "USE_SPI" is not defined
@@ -19,35 +32,45 @@
 // On the SparkFun 9DoF IMU breakout the default is 1, and when the ADR jumper is closed the value becomes 0
 #define AD0_VAL 0
 
+#ifdef USE_SPI
+ICM_20948_SPI myICM; // If using SPI create an ICM_20948_SPI object
+#else
 ICM_20948_I2C myICM; // Otherwise create an ICM_20948_I2C object
-
-// Some vars to control or respond to interrupts
-volatile bool isrFired = false;
-volatile bool sensorSleep = false;
-volatile bool canToggle = false;
+#endif
 
 void setup()
 {
-  pinMode(REG_1V8_EN_PIN, OUTPUT);
-  digitalWrite(REG_1V8_EN_PIN, 1);
-  pinMode(INT_PIN, INPUT_PULLUP);                                   // Using a pullup b/c ICM-20948 Breakout board has an onboard pullup as well and we don't want them to compete
-  attachInterrupt(digitalPinToInterrupt(INT_PIN), icmISR, FALLING); // Set up a falling interrupt
 
-  SERIAL_PORT.begin(115200);
+  SERIAL_PORT.begin(921600);
   while (!SERIAL_PORT)
   {
   };
 
-  pinMode(SCL_PIN, OUTPUT);
-  pinMode(SDA_PIN, INPUT);
-  WIRE_PORT.setPins(SDA_PIN, SCL_PIN); //SDA/SCL
+#ifdef USE_SPI
+  SPI_PORT.begin();
+#else
+
+  WIRE_PORT.setPins(SDA_PIN,SCL_PIN); 
+  pinMode(REG_1V8_EN_PIN, OUTPUT);
+  digitalWrite(REG_1V8_EN_PIN, 1);
+  delay(100);
   WIRE_PORT.begin();
   WIRE_PORT.setClock(400000);
+  BMP388_DEV bmp388;   
+  bmp388.begin(SLEEP_MODE, 0x76);
+#endif
+
+  myICM.enableDebugging(); // Uncomment this line to enable helpful debug messages on Serial
 
   bool initialized = false;
   while (!initialized)
   {
+
+#ifdef USE_SPI
+    myICM.begin(CS_PIN, SPI_PORT, SPI_FREQ); // Here we are using the user-defined SPI_FREQ as the clock speed of the SPI bus
+#else
     myICM.begin(WIRE_PORT, AD0_VAL);
+#endif
 
     SERIAL_PORT.print(F("Initialization of the sensor returned: "));
     SERIAL_PORT.println(myICM.statusString());
@@ -75,34 +98,33 @@ void setup()
   delay(250);
 
   // Now wake the sensor up
-  myICM.sleep(sensorSleep);
+  myICM.sleep(false);
   myICM.lowPower(false);
 
   // The next few configuration functions accept a bit-mask of sensors for which the settings should be applied.
 
   // Set Gyro and Accelerometer to a particular sample mode
-  myICM.setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Cycled);
-  SERIAL_PORT.print(F("setSampleMode returned: "));
-  SERIAL_PORT.println(myICM.statusString());
+  // options: ICM_20948_Sample_Mode_Continuous
+  //          ICM_20948_Sample_Mode_Cycled
+  myICM.setSampleMode(ICM_20948_Internal_Acc, ICM_20948_Sample_Mode_Continuous);
+  myICM.setSampleMode(ICM_20948_Internal_Gyr, ICM_20948_Sample_Mode_Continuous);
 
-  ICM_20948_smplrt_t mySmplrt;
-  mySmplrt.g = 1;  
-  mySmplrt.a = 1; 
-  myICM.setSampleRate((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), mySmplrt);
-
-  SERIAL_PORT.print(F("setSampleRate returned: "));
-  SERIAL_PORT.println(myICM.statusString());
-
+  if (myICM.status != ICM_20948_Stat_Ok)
+  {
+    SERIAL_PORT.print(F("setSampleMode returned: "));
+    SERIAL_PORT.println(myICM.statusString());
+  }
+  
   // Set full scale ranges for both acc and gyr
   ICM_20948_fss_t myFSS; // This uses a "Full Scale Settings" structure that can contain values for all configurable sensors
 
-  myFSS.a = gpm2; // (ICM_20948_ACCEL_CONFIG_FS_SEL_e)
+  myFSS.a = gpm16; // (ICM_20948_ACCEL_CONFIG_FS_SEL_e)
                   // gpm2
                   // gpm4
                   // gpm8
                   // gpm16
 
-  myFSS.g = dps250; // (ICM_20948_GYRO_CONFIG_1_FS_SEL_e)
+  myFSS.g = dps2000; // (ICM_20948_GYRO_CONFIG_1_FS_SEL_e)
                     // dps250
                     // dps500
                     // dps1000
@@ -137,6 +159,7 @@ void setup()
                                     // gyr_d361bw4_n376bw5
 
   myICM.setDLPFcfg((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), myDLPcfg);
+
   if (myICM.status != ICM_20948_Stat_Ok)
   {
     SERIAL_PORT.print(F("setDLPcfg returned: "));
@@ -144,7 +167,6 @@ void setup()
   }
 
   // Choose whether or not to use DLPF
-  // Here we're also showing another way to access the status values, and that it is OK to supply individual sensor masks to these functions
   ICM_20948_Status_e accDLPEnableStat = myICM.enableDLPF(ICM_20948_Internal_Acc, true);
   ICM_20948_Status_e gyrDLPEnableStat = myICM.enableDLPF(ICM_20948_Internal_Gyr, true);
   SERIAL_PORT.print(F("Enable DLPF for Accelerometer returned: "));
@@ -153,6 +175,7 @@ void setup()
   SERIAL_PORT.println(myICM.statusString(gyrDLPEnableStat));
 
   // Choose whether or not to start the magnetometer
+  
   myICM.startupMagnetometer();
   if (myICM.status != ICM_20948_Stat_Ok)
   {
@@ -160,64 +183,102 @@ void setup()
     SERIAL_PORT.println(myICM.statusString());
   }
 
-  myICM.cfgIntActiveLow(true);  // Active low to be compatible with the breakout board's pullup resistor
-  myICM.cfgIntOpenDrain(false); // Push-pull, though open-drain would also work thanks to the pull-up resistors on the breakout
-  myICM.cfgIntLatch(true);      // Latch the interrupt until cleared
-  SERIAL_PORT.print(F("cfgIntLatch returned: "));
-  SERIAL_PORT.println(myICM.statusString());
-
-  myICM.intEnableRawDataReady(true); // enable interrupts on raw data ready
-  SERIAL_PORT.print(F("intEnableRawDataReady returned: "));
-  SERIAL_PORT.println(myICM.statusString());
-
-  //  // Note: weirdness with the Wake on Motion interrupt being always enabled.....
-  //  uint8_t zero_0 = 0xFF;
-  //  ICM_20948_execute_r( &myICM._device, AGB0_REG_INT_ENABLE, (uint8_t*)&zero_0, sizeof(uint8_t) );
-  //  SERIAL_PORT.print("INT_EN was: 0x"); SERIAL_PORT.println(zero_0, HEX);
-  //  zero_0 = 0x00;
-  //  ICM_20948_execute_w( &myICM._device, AGB0_REG_INT_ENABLE, (uint8_t*)&zero_0, sizeof(uint8_t) );
-  ICM_20948_smplrt_t mySmplrtHigh;
-  mySmplrtHigh.g = 55;  // 1125 / (1 + 1) = 562.5 Hz
-  mySmplrtHigh.a = 55;
-  myICM.setSampleRate((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), mySmplrtHigh);
-  delay(1000);
-
   SERIAL_PORT.println();
   SERIAL_PORT.println(F("Configuration complete!"));
 
 }
-unsigned long now;
 
 void loop()
 {
-  if (isrFired)
-  { // If our isr flag is set then clear the interrupts on the ICM
-    isrFired = false;
-    myICM.getAGMT();            // get the A, G, M, and T readings
-    printScaledAGMT(&myICM, now);    // This function takes into account the scale settings from when the measurement was made to calculate the values with units
-    //myICM.clearInterrupts();  // This would be efficient... but not compatible with Uno
+
+  myICM.resetMag();
+  SERIAL_PORT.println(">>> Capturing data at ~400Hz");
+  ICM_20948_smplrt_t mySmplrtHigh;
+  mySmplrtHigh.g = 1;  // 1125 / (1 + 1) = 562.5 Hz
+  mySmplrtHigh.a = 1;
+  myICM.setSampleRate((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), mySmplrtHigh);
+  delay(1000);
+
+  unsigned long startTime = millis();
+  while (millis() - startTime < 5000) {  // 5 segundos
+    if (myICM.dataReady()) {
+      myICM.getAGMT();
+      unsigned long actual = micros();
+      printScaledAGMT(&myICM, actual);
+    }
   }
 
-  myICM.clearInterrupts(); // clear interrupts for next time -
-                           //    usually you'd do this only if an interrupt has occurred, however
-                           //    on the 328p I2C usage can block interrupts. This means that sometimes
-                           //    an interrupt is missed. When missed, if using an edge-based interrupt
-                           //    and only clearing interrupts when one was detected there will be no more
-                           //    edges to respond to, so no more interrupts will be detected. Here are
-                           //    some possible solutions:
-                           //    1. use a level based interrupt
-                           //    2. use the pulse-based interrupt in ICM settings (set cfgIntLatch to false)
-                           //    3. use a microcontroller with nestable interrupts
-                           //    4. clear the interrupts often
+  SERIAL_PORT.println(">>> Turning on sleep mode");
+  // myICM.swReset();
+  delay(100);
+  myICM.resetMag();
+  ICM_20948_Status_e stat = myICM.sleep(true);
+  Serial.print(stat);
+  delay(5000);
+  myICM.sleep(false);
+  // myICM.startupMagnetometer();
+
+  SERIAL_PORT.println(">>> Turning on low power mode");
+  myICM.lowPower(true);
+  startTime = millis();
+  while (millis() - startTime < 5000) {  // 5 segundos
+    if (myICM.dataReady()) {
+      myICM.getAGMT();
+      unsigned long actual = micros();
+      printScaledAGMT(&myICM, actual);
+    }
+  }
+  myICM.lowPower(false);
+
+  SERIAL_PORT.println(">>> Full cycle complete, waiting 5 seconds before next cycle");
+  delay(5000);
+
 }
 
-void icmISR(void)
+void printPaddedInt16b(int16_t val)
 {
-  now = micros();
-  isrFired = true; // Can't use I2C within ISR on 328p, so just set a flag to know that data is available
+  if (val > 0)
+  {
+    SERIAL_PORT.print(" ");
+    if (val < 10000)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (val < 1000)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (val < 100)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (val < 10)
+    {
+      SERIAL_PORT.print("0");
+    }
+  }
+  else
+  {
+    SERIAL_PORT.print("-");
+    if (abs(val) < 10000)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (abs(val) < 1000)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (abs(val) < 100)
+    {
+      SERIAL_PORT.print("0");
+    }
+    if (abs(val) < 10)
+    {
+      SERIAL_PORT.print("0");
+    }
+  }
+  SERIAL_PORT.print(abs(val));
 }
-
-// Below here are some helper functions to print the data nicely!
 
 void printFormattedFloat(float val, uint8_t leading, uint8_t decimals)
 {
@@ -249,8 +310,13 @@ void printFormattedFloat(float val, uint8_t leading, uint8_t decimals)
   }
 }
 
+#ifdef USE_SPI
+void printScaledAGMT(ICM_20948_SPI *sensor, unsigned long time)
+{
+#else
 void printScaledAGMT(ICM_20948_I2C *sensor, unsigned long time)
 {
+#endif
   printFormattedFloat(time/1000000.0, 2, 6);
   SERIAL_PORT.print(",");
   printFormattedFloat(sensor->accX(), 1, 5);
@@ -272,3 +338,5 @@ void printScaledAGMT(ICM_20948_I2C *sensor, unsigned long time)
   printFormattedFloat(sensor->magZ(), 3, 2); 
   SERIAL_PORT.println();
 } 
+
+

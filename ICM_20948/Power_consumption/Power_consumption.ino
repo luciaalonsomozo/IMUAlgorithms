@@ -86,7 +86,7 @@ void setup()
   myICM.sleep(false);
   myICM.lowPower(false);
 
-  myICM.setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Continuous);
+  myICM.setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Cycled);
   if (myICM.status != ICM_20948_Stat_Ok)
   {
     SERIAL_PORT.print(F("setSampleMode returned: "));

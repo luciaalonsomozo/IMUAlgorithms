@@ -7,8 +7,6 @@
 
 #include "ICM_20948.h" // Click here to get the library: http://librarymanager/All#SparkFun_ICM_20948_IMU
 
-//#define USE_SPI       // Uncomment this to use SPI
-
 #define SERIAL_PORT Serial
 
 #define INT_PIN 5 // Make sure to connect this pin on your uC to the "INT" pin on the ICM-20948 breakout
@@ -19,7 +17,7 @@
 #define WIRE_PORT Wire // Your desired Wire port.      Used when "USE_SPI" is not defined
 // The value of the last bit of the I2C address.
 // On the SparkFun 9DoF IMU breakout the default is 1, and when the ADR jumper is closed the value becomes 0
-#define AD0_VAL 1
+#define AD0_VAL 0
 
 ICM_20948_I2C myICM; // Otherwise create an ICM_20948_I2C object
 
@@ -85,7 +83,7 @@ void setup()
   // Set Gyro and Accelerometer to a particular sample mode
   // options: ICM_20948_Sample_Mode_Continuous
   //          ICM_20948_Sample_Mode_Cycled
-  myICM.setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Cycled);
+  myICM.setSampleMode((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), ICM_20948_Sample_Mode_Continuous);
   SERIAL_PORT.print(F("setSampleMode returned: "));
   SERIAL_PORT.println(myICM.statusString());
 
@@ -200,11 +198,9 @@ void setup()
   //  SERIAL_PORT.print("INT_EN was: 0x"); SERIAL_PORT.println(zero_0, HEX);
   //  zero_0 = 0x00;
   //  ICM_20948_execute_w( &myICM._device, AGB0_REG_INT_ENABLE, (uint8_t*)&zero_0, sizeof(uint8_t) );
-  // Frecuencia alta: 400 Hz (real ≈ 562.5 Hz)
-  SERIAL_PORT.println(">>> Capturando datos a ~400Hz");
   ICM_20948_smplrt_t mySmplrtHigh;
   mySmplrtHigh.g = 1;  // 1125 / (1 + 1) = 562.5 Hz
-  mySmplrtHigh.a =1;
+  mySmplrtHigh.a = 1;
   myICM.setSampleRate((ICM_20948_Internal_Acc | ICM_20948_Internal_Gyr), mySmplrtHigh);
   delay(1000);
 
