@@ -73,7 +73,7 @@ with open(output_file, mode='w', newline='') as f_out:
             state_estimate = state_estimate + K.dot(y_tilde)
             P = (np.eye(4) - K.dot(C)).dot(P)
 
-            phi_hat = state_estimate[0]
-            theta_hat = state_estimate[2]
+            phi_hat = state_estimate[0].item()
+            theta_hat = state_estimate[2].item()
 
-            writer.writerow([time, str(round(phi_hat[0] * 180.0 / pi, 3)), str(round(theta_hat[0] * 180.0 / pi, 3))])
+            writer.writerow([time, str(round(phi_hat * 180.0 / pi, 3)), str(round(theta_hat * 180.0 / pi, 3))])
