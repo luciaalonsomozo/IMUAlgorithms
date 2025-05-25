@@ -3,7 +3,7 @@ from scipy import linalg
 from matplotlib import pyplot as plt
 
  #started with https://github.com/nliaudat/magnetometer_calibration/blob/main/calibrate.py
- #this corrected code by S. James Remington, see issue #1 in above contribution.
+ #this corrected code by S. James Remington
  #required data input file: x,y,z values in .csv (text, comma separated value) format.
  
 class Magnetometer(object):
@@ -15,10 +15,10 @@ class Magnetometer(object):
 
     '''
     # MField for magnetometer calibration for data without DMP
-    MField = 39.4784
+    # MField = 39.4784
     
     # MField for magnetometer calibration for data with DMP
-    # MField = 250  
+    MField = 250  
     
     # MField for accelerometer calibration
     # MField = 8192.0 

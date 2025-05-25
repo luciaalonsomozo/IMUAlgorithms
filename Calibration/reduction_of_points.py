@@ -5,7 +5,6 @@ from scipy.spatial import cKDTree
 file_path = "data/calibration_30000_samples/acc3_raw.csv"
 data = pd.read_csv(file_path, header=None).values
 
-
 target_points = 3000
 
 def downsample_points(points, target_size):

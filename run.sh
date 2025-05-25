@@ -1,5 +1,5 @@
-# python3 util/leer_datos_dmp.py
-# python3 util/leer_datos_direct.py
+# python3 readings_to_csv/reading_data_dmp.py
+# python3 readings_to_csv/reading_data.py
 python3 filters/euler_direct.py
 python3 filters/complementary_filter.py
 python3 filters/kalman_filter.py
