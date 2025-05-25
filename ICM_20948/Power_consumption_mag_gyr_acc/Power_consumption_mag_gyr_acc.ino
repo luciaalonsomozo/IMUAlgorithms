@@ -1,13 +1,7 @@
 /****************************************************************
- * Example2_Advanced.ino
+ * Author: Lucía Alonso Mozo
+ * Builds on Example2_Advanced.ino
  * ICM 20948 Arduino Library Demo
- * Shows how to use granular configuration of the ICM 20948
- * Owen Lyke @ SparkFun Electronics
- * Original Creation Date: April 17 2019
- *
- * Please see License.md for the license information.
- *
- * Distributed as-is; no warranty is given.
  ***************************************************************/
 
 
@@ -200,7 +194,7 @@ void loop()
   delay(1000);
 
   unsigned long startTime = millis();
-  while (millis() - startTime < 5000) {  // 5 segundos
+  while (millis() - startTime < 5000) {  // 5 seconds
     if (myICM.dataReady()) {
       myICM.getAGMT();
       unsigned long actual = micros();
