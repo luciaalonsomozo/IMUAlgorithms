@@ -3,7 +3,7 @@ from scipy import linalg
 from matplotlib import pyplot as plt
 
  #started with https://github.com/nliaudat/magnetometer_calibration/blob/main/calibrate.py
- #this corrected code by S. James Remington
+ #Based on the code of S. James Remington https://github.com/jremington/AltIMU-AHRS/tree/master 
  #required data input file: x,y,z values in .csv (text, comma separated value) format.
  
 class Magnetometer(object):
